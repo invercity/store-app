@@ -62,7 +62,7 @@ export class StoreService {
         });
 
         const total = products.reduce(
-            (sum, p) => sum + p.price * p.quantity,
+            (sum: number, p: any) => sum + p.price * p.quantity,
             0,
         );
 
