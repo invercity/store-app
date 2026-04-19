@@ -56,7 +56,7 @@ docker-compose up --build
 ## Decisions & Trade-offs
 - **Monorepo Structure:** Simplified management of client and server in one repository for this scope, easier to maintain and deploy, 
 and switch to separate repositories in the future.
-- **NestJS:** A powerful and flexible framework for building scalable server-side applications. Added support of Swagger UI for API documentation.
+- **NestJS:** A powerful and flexible framework for building scalable server-side applications. Added support of Swagger UI for API documentation, validations.
 - **PostgreSQL:** Chosen for its support for complex queries, especially with Prisma's capabilities.
 - **Prisma for ORM:** Prisma ORM for its type safety and ease of use, migrations and seed support.
 - **Material UI:** Used for rapid development of a professional-looking interface.
