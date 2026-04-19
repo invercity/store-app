@@ -1,5 +1,11 @@
 import axios from 'axios';
-import { Store, Product, ProductListResponse, ProductFilters } from '../types';
+import {
+    Store,
+    Product,
+    ProductListResponse,
+    ProductFilters,
+    InventoryValueResponse,
+} from '../types';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -26,6 +32,7 @@ api.interceptors.response.use(
 );
 
 export const storeApi = {
+    get: (id: string) => api.get<Store>(`/store/${id}`).then(res => res.data),
     getAll: () => api.get<Store[]>('/store').then(res => res.data),
     create: (name: string) => api.post<Store>('/store', { name }).then(res => res.data),
     update: (id: string, name: string) =>
@@ -35,6 +42,8 @@ export const storeApi = {
         api
             .get<ProductListResponse>(`/store/${id}/products`, { params: filters })
             .then(res => res.data),
+    getInventoryValue: (id: string) =>
+        api.get<InventoryValueResponse>(`/store/${id}/inventory-value`).then(res => res.data),
 };
 
 export const productApi = {

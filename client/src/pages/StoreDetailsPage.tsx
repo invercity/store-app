@@ -12,7 +12,9 @@ import {
     TableRow,
     CircularProgress,
     Breadcrumbs,
+    Button,
 } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { storeApi } from '../api';
 import { Store, Product } from '../types';
 
@@ -20,18 +22,22 @@ export default function StoreDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const [store, setStore] = useState<Store | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
+    const [inventoryValue, setInventoryValue] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             if (!id) return;
             try {
-                const stores = await storeApi.getAll();
-                const currentStore = stores.find(s => s.id === id);
+                const currentStore = await storeApi.get(id);
                 if (currentStore) {
                     setStore(currentStore);
-                    const productList = await storeApi.getProducts(id);
+                    const [productList, inventoryData] = await Promise.all([
+                        storeApi.getProducts(id),
+                        storeApi.getInventoryValue(id),
+                    ]);
                     setProducts(productList.data);
+                    setInventoryValue(inventoryData.total);
                 }
             } catch (error) {
                 console.error('Failed to fetch store details', error);
@@ -57,13 +63,27 @@ export default function StoreDetailsPage() {
             <Typography variant="h4" gutterBottom>
                 {store.name}
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                Address: {store.address || 'N/A'}
-            </Typography>
 
-            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-                Products in this store
-            </Typography>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mt: 4,
+                    mb: 2,
+                }}
+            >
+                <Typography variant="h6">Products in this store</Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    component={Link}
+                    to={`/product/new?storeId=${id}`}
+                >
+                    Add Product
+                </Button>
+            </Box>
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -95,6 +115,13 @@ export default function StoreDetailsPage() {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {inventoryValue !== null && (
+                <Paper sx={{ p: 2, mb: 3 }}>
+                    <Typography variant="h6">Total Inventory Value</Typography>
+                    <Typography variant="h4">${inventoryValue.toLocaleString()}</Typography>
+                </Paper>
+            )}
         </Box>
     );
 }

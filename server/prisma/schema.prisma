@@ -20,6 +20,6 @@ model Product {
   price     Float
   quantity  Int
   storeId   String
-  store     Store    @relation(fields: [storeId], references: [id])
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }

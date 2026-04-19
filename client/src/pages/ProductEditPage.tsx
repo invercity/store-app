@@ -12,7 +12,7 @@ import {
     CircularProgress,
     Breadcrumbs,
 } from '@mui/material';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
 import { productApi, storeApi } from '../api';
 import { Store } from '../types';
 
@@ -28,6 +28,8 @@ type ProductFormData = z.infer<typeof productSchema>;
 
 export default function ProductEditPage() {
     const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
+    const storeIdFromQuery = searchParams.get('storeId');
     const isEdit = !!id;
     const navigate = useNavigate();
     const [stores, setStores] = useState<Store[]>([]);
@@ -37,10 +39,13 @@ export default function ProductEditPage() {
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors },
     } = useForm<ProductFormData>({
         resolver: zodResolver(productSchema),
     });
+
+    const storeIdValue = watch('storeId');
 
     useEffect(() => {
         const fetchStores = async () => {
@@ -52,6 +57,10 @@ export default function ProductEditPage() {
             }
         };
         fetchStores();
+
+        if (storeIdFromQuery && !isEdit) {
+            setValue('storeId', storeIdFromQuery);
+        }
 
         if (isEdit) {
             const fetchProduct = async () => {
@@ -70,7 +79,7 @@ export default function ProductEditPage() {
             };
             fetchProduct();
         }
-    }, [id, isEdit, setValue]);
+    }, [id, isEdit, setValue, storeIdFromQuery]);
 
     const onSubmit = async (data: ProductFormData) => {
         try {
@@ -139,11 +148,15 @@ export default function ProductEditPage() {
                             select
                             label="Store"
                             fullWidth
-                            defaultValue=""
                             {...register('storeId')}
                             error={!!errors.storeId}
                             helperText={errors.storeId?.message}
+                            InputLabelProps={{ shrink: true }}
+                            value={storeIdValue || ''}
                         >
+                            <MenuItem value="" disabled>
+                                Select a store
+                            </MenuItem>
                             {stores.map(store => (
                                 <MenuItem key={store.id} value={store.id}>
                                     {store.name}

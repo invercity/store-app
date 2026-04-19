@@ -29,3 +29,8 @@ export interface ProductFilters {
     minPrice?: number;
     maxPrice?: number;
 }
+
+export interface InventoryValueResponse {
+    storeId: string;
+    total: number;
+}

@@ -29,8 +29,13 @@ export class StoreService {
         try {
             return await this.prisma.store.delete({ where: { id: storeId } });
         } catch (error) {
+            console.log(error)
             throw new NotFoundException(`Store with ID ${storeId} not found`);
         }
+    }
+
+    get(id: string) {
+        return this.prisma.store.findUnique({ where: { id } });
     }
 
     getAll() {
@@ -38,34 +43,34 @@ export class StoreService {
     }
 
     async getAllProductsByStoreWithFilters(
-        storeId: string,
+        id: string,
         query: ProductListFiltersDTO,
     ) {
         const store = await this.prisma.store.findUnique({
-            where: { id: storeId },
+            where: { id },
         });
         if (!store) {
-            throw new NotFoundException(`Store with ID ${storeId} not found`);
+            throw new NotFoundException(`Store with ID ${id} not found`);
         }
-        return this.productService.getAllByStoreWithFilters(storeId, query);
+        return this.productService.getAllByStoreWithFilters(id, query);
     }
 
-    async getInventoryValue(storeId: string) {
+    async getInventoryValue(id: string) {
         const store = await this.prisma.store.findUnique({
-            where: { id: storeId },
+            where: { id },
         });
         if (!store) {
-            throw new NotFoundException(`Store with ID ${storeId} not found`);
+            throw new NotFoundException(`Store with ID ${id} not found`);
         }
-        const products = await this.prisma.product.findMany({
-            where: { storeId },
-        });
+        const result = await this.prisma.$queryRaw<{ total: number }[]>`
+            SELECT COALESCE(SUM(price * quantity), 0) as total
+            FROM "Product"
+            WHERE "storeId" = ${id}
+        `;
 
-        const total = products.reduce(
-            (sum: number, p: any) => sum + p.price * p.quantity,
-            0,
-        );
-
-        return { storeId, total };
+        return {
+            storeId: id,
+            total: result[0].total,
+        };
     }
 }

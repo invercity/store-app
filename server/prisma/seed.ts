@@ -1,68 +1,104 @@
-import { PrismaClient } from '@prisma/client'
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 const connectionString = `${process.env.DATABASE_URL}`;
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    console.log('Start seeding...')
+    console.log('Start seeding...');
 
-    // Create initial data
-    const store1 = await prisma.store.create({
-        data: {
+    const stores = [
+        {
             name: 'Central Store',
-            products: {
-                create: [
-                    {
-                        name: 'Laptop',
-                        category: 'Electronics',
-                        price: 1200.0,
-                        quantity: 10,
-                    },
-                    {
-                        name: 'Coffee Mug',
-                        category: 'Kitchen',
-                        price: 15.0,
-                        quantity: 50,
-                    },
-                ],
-            },
+            products: [
+                {
+                    name: 'Laptop',
+                    category: 'Electronics',
+                    price: 1200.0,
+                    quantity: 10,
+                },
+                {
+                    name: 'Coffee Mug',
+                    category: 'Kitchen',
+                    price: 15.0,
+                    quantity: 50,
+                },
+            ],
         },
-    })
-
-    const store2 = await prisma.store.create({
-        data: {
+        {
             name: 'Gadget Hub',
-            products: {
-                create: [
-                    {
-                        name: 'Smartphone',
-                        category: 'Electronics',
-                        price: 800.0,
-                        quantity: 25,
-                    },
-                    {
-                        name: 'Wireless Mouse',
-                        category: 'Electronics',
-                        price: 25.0,
-                        quantity: 100,
-                    },
-                ],
-            },
+            products: [
+                {
+                    name: 'Smartphone',
+                    category: 'Electronics',
+                    price: 800.0,
+                    quantity: 25,
+                },
+                {
+                    name: 'Wireless Mouse',
+                    category: 'Electronics',
+                    price: 25.0,
+                    quantity: 100,
+                },
+            ],
         },
-    });
+    ];
 
-    console.log({ store1, store2 })
-    console.log('Seeding finished.')
+    for (const storeData of stores) {
+        const store = await prisma.store.findFirst({
+            where: { name: storeData.name },
+        });
+
+        if (!store) {
+            await prisma.store.create({
+                data: {
+                    name: storeData.name,
+                    products: {
+                        create: storeData.products,
+                    },
+                },
+            });
+            console.log(`Created store: ${storeData.name}`);
+        } else {
+            console.log(`Store already exists: ${storeData.name}`);
+
+            for (const productData of storeData.products) {
+                const product = await prisma.product.findFirst({
+                    where: {
+                        name: productData.name,
+                        storeId: store.id,
+                    },
+                });
+
+                if (!product) {
+                    await prisma.product.create({
+                        data: {
+                            ...productData,
+                            storeId: store.id,
+                        },
+                    });
+                    console.log(
+                        `Created product: ${productData.name} for store ${storeData.name}`,
+                    );
+                } else {
+                    console.log(
+                        `Product already exists: ${productData.name} in store ${storeData.name}`,
+                    );
+                }
+            }
+        }
+    }
+
+    console.log('Seeding finished.');
 }
 
 main()
-    .catch((e) => {
-        console.error(e)
-        process.exit(1)
+    .catch(e => {
+        console.error(e);
+        process.exit(1);
     })
     .finally(async () => {
-        await prisma.$disconnect()
-    })
+        await prisma.$disconnect();
+    });

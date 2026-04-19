@@ -12,7 +12,7 @@ import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { StoreService } from './store.service';
 import { CreateStoreDTO, UpdateStoreDTO } from './dto';
 import { ProductListFiltersDTO } from '../product/dto';
-import { StoreEntity } from './entity';
+import { StoreEntity, InventoryValueEntity } from './entity';
 import { ProductListEntity } from '../product/entity';
 
 @Controller('store')
@@ -32,6 +32,12 @@ export class StoreController {
         return this.storeService.update(id, body);
     }
 
+    @Get(':id')
+    @ApiOkResponse({ type: StoreEntity })
+    get(@Param('id') id: string) {
+        return this.storeService.get(id);
+    }
+
     @Get()
     @ApiOkResponse({ type: StoreEntity, isArray: true })
     getAll() {
@@ -48,6 +54,7 @@ export class StoreController {
     }
 
     @Get(':id/inventory-value')
+    @ApiOkResponse({ type: InventoryValueEntity })
     getInventoryValue(@Param('id') id: string) {
         return this.storeService.getInventoryValue(id);
     }
